@@ -5,9 +5,10 @@
         <header class="header">
           <h1>todos</h1>
           <input
+            v-model="newTask"
+            @keyup.enter="addTask"
             class="new-todo"
             placeholder="What needs to be done?"
-            value=""
           />
         </header>
         <section class="main">
@@ -16,12 +17,9 @@
           <ul class="todo-list">
             <li v-for="task in tasks" :key="task.id">
               <div class="view">
-                <input
-                  type="checkbox"
-                  class="toggle"
-                  :checked="task.completed"
-                />
-                <label>{{ task.text }}</label> <button class="destroy"></button>
+                <input type="checkbox" class="toggle" :checked="task.completed" />
+                <label>{{ task.text }}</label>
+                <button class="destroy"></button>
               </div>
             </li>
           </ul>
@@ -38,7 +36,8 @@ export default {
   name: "App",
   data() {
     return {
-      tasks: []
+      tasks: [],
+      newTask: ""
     };
   },
   beforeMount() {
@@ -49,6 +48,35 @@ export default {
           this.tasks.push(doc.data());
         });
       });
+  },
+  methods: {
+    addTask() {
+      const task = {
+        id: this.getId(),
+        text: this.newTask,
+        completed: false
+      };
+      this.tasks.push(task);
+      db.collection("tasks").add({
+        text: task.text,
+        id: task.id,
+        completed: task.completed
+      });
+    },
+    getId() {
+      if (this.tasks.length === 0) {
+        return 1;
+      }
+      const ids = this.tasks.map(item => +item.id);
+      let maxId = ids[0];
+      for (let id of ids) {
+        if (id > maxId) {
+          maxId = id;
+        }
+      }
+      const newId = maxId + 1;
+      return newId;
+    }
   }
 };
 </script>
