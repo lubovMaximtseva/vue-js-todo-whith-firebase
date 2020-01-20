@@ -19,7 +19,7 @@
               <div class="view">
                 <input type="checkbox" class="toggle" :checked="task.completed" />
                 <label>{{ task.text }}</label>
-                <button class="destroy"></button>
+                <button v-on:click="deleteTask(task.id)" class="destroy"></button>
               </div>
             </li>
           </ul>
@@ -41,41 +41,48 @@ export default {
     };
   },
   beforeMount() {
-    db.collection("tasks")
-      .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          this.tasks.push(doc.data());
-        });
-      });
+    this.getTasks();
   },
   methods: {
-    addTask() {
-      const task = {
-        id: this.getId(),
-        text: this.newTask,
-        completed: false
-      };
-      this.tasks.push(task);
-      db.collection("tasks").add({
-        text: task.text,
-        id: task.id,
-        completed: task.completed
-      });
+    getTasks() {
+      db.collection("tasks")
+        .get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            const task = {
+              text: data.text,
+              completed: data.completed,
+              id: doc.id
+            };
+            this.tasks.push(task);
+          });
+        });
     },
-    getId() {
-      if (this.tasks.length === 0) {
-        return 1;
-      }
-      const ids = this.tasks.map(item => +item.id);
-      let maxId = ids[0];
-      for (let id of ids) {
-        if (id > maxId) {
-          maxId = id;
-        }
-      }
-      const newId = maxId + 1;
-      return newId;
+    addTask() {
+      db.collection("tasks")
+        .add({
+          text: this.newTask,
+          completed: false
+        })
+        .then(doc => {
+          const task = {
+            text: this.newTask,
+            completed: false,
+            id: doc.id
+          };
+          this.tasks.push(task);
+          this.newTask = "";
+        });
+    },
+    deleteTask(id) {
+      db.collection("tasks")
+        .doc(id)
+        .delete()
+        .then(() => {
+          const newTasksList = this.tasks.filter(task => task.id !== id);
+          this.tasks = newTasksList;
+        });
     }
   }
 };
