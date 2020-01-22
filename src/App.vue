@@ -15,12 +15,18 @@
           <input class="toggle-all" type="checkbox" />
           <label for="toggle-all"></label>
           <ul class="todo-list">
-            <li v-for="task in tasks" :key="task.id">
+            <li v-for="task in tasks" :key="task.id" :class="{ 'completed': task.completed }">
               <div class="view">
-                <input type="checkbox" class="toggle" :checked="task.completed" />
+                <input
+                  @click="toggleTask(task.id)"
+                  type="checkbox"
+                  class="toggle"
+                  :checked="task.completed"
+                />
                 <label>{{ task.text }}</label>
-                <button v-on:click="deleteTask(task.id)" class="destroy"></button>
+                <button @click="deleteTask(task.id)" class="destroy"></button>
               </div>
+              <input type="text" class="edit" />
             </li>
           </ul>
         </section>
@@ -81,6 +87,28 @@ export default {
         .delete()
         .then(() => {
           const newTasksList = this.tasks.filter(task => task.id !== id);
+          this.tasks = newTasksList;
+        });
+    },
+
+    toggleTask(id) {
+      let changedTask = {};
+
+      const newTasksList = this.tasks.map(task => {
+        if (task.id === id) {
+          changedTask = {
+            text: task.text,
+            completed: !task.completed
+          };
+          return { id: task.id, ...changedTask };
+        }
+        return task;
+      });
+
+      db.collection("tasks")
+        .doc(id)
+        .set(changedTask)
+        .then(() => {
           this.tasks = newTasksList;
         });
     }
@@ -279,6 +307,7 @@ body {
   width: 40px;
   height: auto;
   position: absolute;
+  left: 0;
   top: 0;
   bottom: 0;
   margin: auto 0;
