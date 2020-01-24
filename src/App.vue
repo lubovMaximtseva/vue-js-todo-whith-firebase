@@ -15,7 +15,24 @@
           <input class="toggle-all" type="checkbox" />
           <label for="toggle-all"></label>
           <ul class="todo-list">
-            <li v-for="task in tasks" :key="task.id" :class="{ 'completed': task.completed }">
+            <li
+              v-for="task in tasks"
+              :key="task.id"
+              :class="{
+                completed: task.completed,
+                editing: editingTask.id === task.id
+              }"
+              @dblclick="editTask(task.id)"
+            >
+              <input
+                v-if="editingTask.id === task.id"
+                :ref="`edit${task.id}`"
+                type="text"
+                class="edit"
+                v-model="editingTask.text"
+                @keyup.enter="finishEdit"
+                v-on-click-outside="finishEdit"
+              />
               <div class="view">
                 <input
                   @click="toggleTask(task.id)"
@@ -26,7 +43,6 @@
                 <label>{{ task.text }}</label>
                 <button @click="deleteTask(task.id)" class="destroy"></button>
               </div>
-              <input type="text" class="edit" />
             </li>
           </ul>
         </section>
@@ -43,7 +59,8 @@ export default {
   data() {
     return {
       tasks: [],
-      newTask: ""
+      newTask: "",
+      editingTask: {}
     };
   },
   beforeMount() {
@@ -111,6 +128,25 @@ export default {
         .then(() => {
           this.tasks = newTasksList;
         });
+    },
+    editTask(id) {
+      const newTasksLis = this.tasks.map(task => {
+        if (task.id === id) {
+          this.editingTask = task;
+          this.$nextTick(() => this.$refs[`edit${id}`][0].focus());
+        }
+      });
+    },
+    finishEdit() {
+      if (!this.editingTask.text) {
+        this.deleteTask(this.editingTask.id);
+      } else if (this.editingTask.id) {
+        db.collection("tasks")
+          .doc(this.editingTask.id)
+          .set(this.editingTask)
+          .then(() => {});
+      }
+      this.editingTask = {};
     }
   }
 };
