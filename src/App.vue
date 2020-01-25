@@ -47,6 +47,23 @@
           </ul>
         </section>
       </div>
+      <footer class="footer">
+        <span class="todo-count">
+          <strong>{{countActiveTask}}</strong> items left
+        </span>
+        <ul class="filters">
+          <li>
+            <a href="#/all" class="selected">All</a>
+          </li>
+          <li>
+            <a href="#/active" class>Active</a>
+          </li>
+          <li>
+            <a href="#/completed" class>Completed</a>
+          </li>
+        </ul>
+        <button class="clear-completed">Clear completed</button>
+      </footer>
     </section>
   </div>
 </template>
@@ -147,6 +164,11 @@ export default {
           .then(() => {});
       }
       this.editingTask = {};
+    }
+  },
+  computed: {
+    countActiveTask() {
+      return this.tasks.filter(task => task.completed === false).length;
     }
   }
 };
