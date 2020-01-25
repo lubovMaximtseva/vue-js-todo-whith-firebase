@@ -62,7 +62,11 @@
             <a href="#/completed" class>Completed</a>
           </li>
         </ul>
-        <button class="clear-completed" @click="clearCompletedTask()">Clear completed</button>
+        <button
+          class="clear-completed"
+          @click="clearCompletedTask()"
+          v-show="countCompletedTask"
+        >Clear completed</button>
       </footer>
     </section>
   </div>
@@ -175,6 +179,9 @@ export default {
   computed: {
     countActiveTask() {
       return this.tasks.filter(task => task.completed === false).length;
+    },
+    countCompletedTask() {
+      return this.tasks.filter(task => task.completed === true).length;
     }
   }
 };
