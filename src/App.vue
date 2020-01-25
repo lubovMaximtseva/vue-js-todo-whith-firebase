@@ -62,7 +62,7 @@
             <a href="#/completed" class>Completed</a>
           </li>
         </ul>
-        <button class="clear-completed">Clear completed</button>
+        <button class="clear-completed" @click="clearCompletedTask()">Clear completed</button>
       </footer>
     </section>
   </div>
@@ -164,6 +164,12 @@ export default {
           .then(() => {});
       }
       this.editingTask = {};
+    },
+    clearCompletedTask() {
+      const completedTasksIds = this.tasks
+        .filter(task => task.completed)
+        .map(task => task.id);
+      completedTasksIds.forEach(id => this.deleteTask(id));
     }
   },
   computed: {
