@@ -16,7 +16,7 @@
           <label for="toggle-all"></label>
           <ul class="todo-list">
             <li
-              v-for="task in tasks"
+              v-for="task in filteredTasks"
               :key="task.id"
               :class="{
                 completed: task.completed,
@@ -49,24 +49,36 @@
       </div>
       <footer class="footer">
         <span class="todo-count">
-          <strong>{{countActiveTask}}</strong> items left
+          <strong>{{ countActiveTask }}</strong> items left
         </span>
         <ul class="filters">
           <li>
-            <a href="#/all" class="selected">All</a>
+            <router-link to="/all" :class="{ selected: filter === '/all' }"
+              >All</router-link
+            >
           </li>
           <li>
-            <a href="#/active" class>Active</a>
+            <router-link
+              to="/active"
+              :class="{ selected: filter === '/active' }"
+              >Active</router-link
+            >
           </li>
           <li>
-            <a href="#/completed" class>Completed</a>
+            <router-link
+              to="/completed"
+              :class="{ selected: filter === '/completed' }"
+              >Completed</router-link
+            >
           </li>
         </ul>
         <button
           class="clear-completed"
-          @click="clearCompletedTask()"
+          @click="clearCompletedTask"
           v-show="countCompletedTask"
-        >Clear completed</button>
+        >
+          Clear completed
+        </button>
       </footer>
     </section>
   </div>
@@ -178,10 +190,29 @@ export default {
   },
   computed: {
     countActiveTask() {
-      return this.tasks.filter(task => task.completed === false).length;
+      return this.activeTasks.length;
     },
     countCompletedTask() {
-      return this.tasks.filter(task => task.completed === true).length;
+      return this.completedTasks.length;
+    },
+    activeTasks() {
+      return this.tasks.filter(task => !task.completed);
+    },
+    completedTasks() {
+      return this.tasks.filter(task => task.completed);
+    },
+    filter() {
+      return this.$route.path;
+    },
+    filteredTasks() {
+      switch (this.filter) {
+        case "/active":
+          return this.activeTasks;
+        case "/completed":
+          return this.completedTasks;
+        default:
+          return this.tasks;
+      }
     }
   }
 };
