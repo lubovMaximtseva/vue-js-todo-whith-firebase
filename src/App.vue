@@ -13,7 +13,7 @@
         </header>
         <section class="main">
           <input class="toggle-all" type="checkbox" />
-          <label for="toggle-all"></label>
+          <label for="toggle-all" @click="checkAllTasks"></label>
           <ul class="todo-list">
             <li
               v-for="task in filteredTasks"
@@ -174,6 +174,22 @@ export default {
         .filter(task => task.completed)
         .map(task => task.id);
       completedTasksIds.forEach(id => this.deleteTask(id));
+    },
+    checkAllTasks() {
+      if (this.countActiveTask === 0) {
+        this.tasks.forEach(task => (task.completed = false));
+      } else {
+        this.tasks.forEach(task => (task.completed = true));
+      }
+      this.tasks.forEach(task => {
+        db.collection("tasks")
+          .doc(task.id)
+          .set({
+            text: task.text,
+            completed: task.completed
+          })
+          .then(() => {});
+      });
     }
   },
   computed: {
