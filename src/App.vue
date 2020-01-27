@@ -47,38 +47,26 @@
           </ul>
         </section>
       </div>
-      <footer class="footer">
+      <footer class="footer" v-show="tasks.length">
         <span class="todo-count">
           <strong>{{ countActiveTask }}</strong> items left
         </span>
         <ul class="filters">
           <li>
-            <router-link to="/all" :class="{ selected: filter === '/all' }"
-              >All</router-link
-            >
+            <router-link to="/all" :class="{ selected: filter === '/all' }">All</router-link>
           </li>
           <li>
-            <router-link
-              to="/active"
-              :class="{ selected: filter === '/active' }"
-              >Active</router-link
-            >
+            <router-link to="/active" :class="{ selected: filter === '/active' }">Active</router-link>
           </li>
           <li>
-            <router-link
-              to="/completed"
-              :class="{ selected: filter === '/completed' }"
-              >Completed</router-link
-            >
+            <router-link to="/completed" :class="{ selected: filter === '/completed' }">Completed</router-link>
           </li>
         </ul>
         <button
           class="clear-completed"
           @click="clearCompletedTask"
           v-show="countCompletedTask"
-        >
-          Clear completed
-        </button>
+        >Clear completed</button>
       </footer>
     </section>
   </div>
