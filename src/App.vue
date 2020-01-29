@@ -14,74 +14,40 @@
         <section class="main">
           <input class="toggle-all" type="checkbox" />
           <label for="toggle-all" @click="checkAllTasks"></label>
-          <ul class="todo-list">
-            <li
-              v-for="task in filteredTasks"
-              :key="task.id"
-              :class="{
-                completed: task.completed,
-                editing: editingTask.id === task.id
-              }"
-              @dblclick="editTask(task.id)"
-            >
-              <input
-                v-if="editingTask.id === task.id"
-                :ref="`edit${task.id}`"
-                type="text"
-                class="edit"
-                v-model="editingTask.text"
-                @keyup.enter="finishEdit"
-                v-on-click-outside="finishEdit"
-              />
-              <div class="view">
-                <input
-                  @click="toggleTask(task.id)"
-                  type="checkbox"
-                  class="toggle"
-                  :checked="task.completed"
-                />
-                <label>{{ task.text }}</label>
-                <button @click="deleteTask(task.id)" class="destroy"></button>
-              </div>
-            </li>
-          </ul>
+          <ListItems
+            :filteredTasks="filteredTasks"
+            :toggleTask="toggleTask"
+            :tasks="tasks"
+            :deleteTask="deleteTask"
+          />
         </section>
+        <Footer
+          :tasks="tasks"
+          :deleteTask="deleteTask"
+          :countActiveTasks="countActiveTasks"
+          :filter="filter"
+          :countCompletedTasks="countCompletedTasks"
+        />
       </div>
-      <footer class="footer" v-show="tasks.length">
-        <span class="todo-count">
-          <strong>{{ countActiveTask }}</strong> items left
-        </span>
-        <ul class="filters">
-          <li>
-            <router-link to="/all" :class="{ selected: filter === '/all' }">All</router-link>
-          </li>
-          <li>
-            <router-link to="/active" :class="{ selected: filter === '/active' }">Active</router-link>
-          </li>
-          <li>
-            <router-link to="/completed" :class="{ selected: filter === '/completed' }">Completed</router-link>
-          </li>
-        </ul>
-        <button
-          class="clear-completed"
-          @click="clearCompletedTask"
-          v-show="countCompletedTask"
-        >Clear completed</button>
-      </footer>
     </section>
   </div>
 </template>
 
 <script>
 import db from "./firebase";
+import ListItems from "./components/ListItems";
+import Footer from "./components/Footer";
 
 export default {
   name: "App",
+  components: {
+    ListItems,
+    Footer
+  },
   data() {
     return {
       tasks: [],
-      newTask: "",
-      editingTask: {}
+      newTask: ""
     };
   },
   beforeMount() {
@@ -104,6 +70,9 @@ export default {
         });
     },
     addTask() {
+      if (!this.newTask) {
+        return;
+      }
       db.collection("tasks")
         .add({
           text: this.newTask,
@@ -128,7 +97,22 @@ export default {
           this.tasks = newTasksList;
         });
     },
-
+    checkAllTasks() {
+      if (this.countActiveTasks === 0) {
+        this.tasks.forEach(task => (task.completed = false));
+      } else {
+        this.tasks.forEach(task => (task.completed = true));
+      }
+      this.tasks.forEach(task => {
+        db.collection("tasks")
+          .doc(task.id)
+          .set({
+            text: task.text,
+            completed: task.completed
+          })
+          .then(() => {});
+      });
+    },
     toggleTask(id) {
       let changedTask = {};
 
@@ -149,54 +133,23 @@ export default {
         .then(() => {
           this.tasks = newTasksList;
         });
-    },
-    editTask(id) {
-      const newTasksLis = this.tasks.map(task => {
-        if (task.id === id) {
-          this.editingTask = task;
-          this.$nextTick(() => this.$refs[`edit${id}`][0].focus());
-        }
-      });
-    },
-    finishEdit() {
-      if (!this.editingTask.text) {
-        this.deleteTask(this.editingTask.id);
-      } else if (this.editingTask.id) {
-        db.collection("tasks")
-          .doc(this.editingTask.id)
-          .set(this.editingTask)
-          .then(() => {});
-      }
-      this.editingTask = {};
-    },
-    clearCompletedTask() {
-      const completedTasksIds = this.tasks
-        .filter(task => task.completed)
-        .map(task => task.id);
-      completedTasksIds.forEach(id => this.deleteTask(id));
-    },
-    checkAllTasks() {
-      if (this.countActiveTask === 0) {
-        this.tasks.forEach(task => (task.completed = false));
-      } else {
-        this.tasks.forEach(task => (task.completed = true));
-      }
-      this.tasks.forEach(task => {
-        db.collection("tasks")
-          .doc(task.id)
-          .set({
-            text: task.text,
-            completed: task.completed
-          })
-          .then(() => {});
-      });
     }
   },
   computed: {
-    countActiveTask() {
+    filteredTasks() {
+      switch (this.filter) {
+        case "/active":
+          return this.activeTasks;
+        case "/completed":
+          return this.completedTasks;
+        default:
+          return this.tasks;
+      }
+    },
+    countActiveTasks() {
       return this.activeTasks.length;
     },
-    countCompletedTask() {
+    countCompletedTasks() {
       return this.completedTasks.length;
     },
     activeTasks() {
@@ -207,16 +160,6 @@ export default {
     },
     filter() {
       return this.$route.path;
-    },
-    filteredTasks() {
-      switch (this.filter) {
-        case "/active":
-          return this.activeTasks;
-        case "/completed":
-          return this.completedTasks;
-        default:
-          return this.tasks;
-      }
     }
   }
 };
